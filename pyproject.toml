@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cymise"
+version = "0.1.0"
+description = "CyMiSE desktop app foundations"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "CyMiSE Team" }]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "black>=23.12",
+  "ruff>=0.6.9",
+  "pytest>=7.4",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

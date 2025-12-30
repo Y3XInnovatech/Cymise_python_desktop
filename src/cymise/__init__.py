@@ -1,0 +1,1 @@
+"""CyMiSE desktop package placeholder."""
