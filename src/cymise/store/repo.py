@@ -132,6 +132,23 @@ class StoreRepository:
     def list_model_documents(self) -> Iterable[ModelDocument]:
         return self.session.scalars(select(ModelDocument)).all()
 
+    def upsert_model_document(
+        self, name: str, content: str, dtmi: Optional[str] = None
+    ) -> ModelDocument:
+        existing = None
+        if dtmi:
+            existing = self.session.scalar(
+                select(ModelDocument).where(ModelDocument.dtmi == dtmi)
+            )
+        if existing:
+            existing.name = name
+            existing.content = content
+            return self._commit_and_refresh(existing)
+
+        doc = ModelDocument(name=name, content=content, dtmi=dtmi)
+        self.session.add(doc)
+        return self._commit_and_refresh(doc)
+
     # Validation payloads
     def set_twin_validation(self, dtmi: str, payload: Optional[dict]) -> Optional[TwinNode]:
         twin = self.get_twin_by_dtmi(dtmi)
