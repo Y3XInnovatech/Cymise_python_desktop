@@ -50,6 +50,10 @@ Conventions:
 **Acceptance Criteria**
 - [ ] Create/update/delete nodes and edges
 - [ ] Query neighbors and subgraphs
+  - Query: get_subgraph(start_dtmi, max_hops, directed=True)
+  - Default directed=True follows relationship direction (source → target)
+  - Optional directed=False returns an undirected neighborhood for visualization only
+  - Unit test must prove directionality (A→B→C: starting at C returns only C when directed)
 - [ ] Attach validation state to nodes/edges
 - [ ] Persist all operations
 

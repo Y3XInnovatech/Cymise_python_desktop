@@ -21,13 +21,46 @@ class StoreRepository:
         self.session = session
 
     # TwinNode
-    def add_twin(self, dtmi: str, display_name: Optional[str] = None) -> TwinNode:
-        twin = TwinNode(dtmi=dtmi, display_name=display_name)
+    def add_twin(
+        self,
+        dtmi: str,
+        display_name: Optional[str] = None,
+        model_version: Optional[str] = None,
+    ) -> TwinNode:
+        twin = TwinNode(
+            dtmi=dtmi, display_name=display_name, model_version=model_version
+        )
         self.session.add(twin)
         return self._commit_and_refresh(twin)
 
     def get_twin_by_dtmi(self, dtmi: str) -> Optional[TwinNode]:
         return self.session.scalar(select(TwinNode).where(TwinNode.dtmi == dtmi))
+
+    def get_twin_by_id(self, twin_id: int) -> Optional[TwinNode]:
+        return self.session.get(TwinNode, twin_id)
+
+    def update_twin(
+        self,
+        dtmi: str,
+        display_name: Optional[str] = None,
+        model_version: Optional[str] = None,
+    ) -> Optional[TwinNode]:
+        twin = self.get_twin_by_dtmi(dtmi)
+        if not twin:
+            return None
+        if display_name is not None:
+            twin.display_name = display_name
+        if model_version is not None:
+            twin.model_version = model_version
+        return self._commit_and_refresh(twin)
+
+    def delete_twin_by_dtmi(self, dtmi: str) -> bool:
+        twin = self.get_twin_by_dtmi(dtmi)
+        if not twin:
+            return False
+        self.session.delete(twin)
+        self._commit()
+        return True
 
     def list_twins(self) -> Iterable[TwinNode]:
         return self.session.scalars(select(TwinNode)).all()
@@ -48,6 +81,23 @@ class StoreRepository:
 
     def list_relationships(self) -> Iterable[RelationshipEdge]:
         return self.session.scalars(select(RelationshipEdge)).all()
+
+    def get_relationship_by_id(self, edge_id: int) -> Optional[RelationshipEdge]:
+        return self.session.get(RelationshipEdge, edge_id)
+
+    def get_relationships_for_source(
+        self, source_id: int
+    ) -> Iterable[RelationshipEdge]:
+        return self.session.scalars(
+            select(RelationshipEdge).where(RelationshipEdge.source_id == source_id)
+        ).all()
+
+    def get_relationships_for_target(
+        self, target_id: int
+    ) -> Iterable[RelationshipEdge]:
+        return self.session.scalars(
+            select(RelationshipEdge).where(RelationshipEdge.target_id == target_id)
+        ).all()
 
     # FileObject
     def add_file_object(
@@ -87,6 +137,25 @@ class StoreRepository:
 
     def list_model_documents(self) -> Iterable[ModelDocument]:
         return self.session.scalars(select(ModelDocument)).all()
+
+    # Validation payloads
+    def set_twin_validation(
+        self, dtmi: str, payload: Optional[dict]
+    ) -> Optional[TwinNode]:
+        twin = self.get_twin_by_dtmi(dtmi)
+        if not twin:
+            return None
+        twin.validation = payload
+        return self._commit_and_refresh(twin)
+
+    def set_edge_validation(
+        self, edge_id: int, payload: Optional[dict]
+    ) -> Optional[RelationshipEdge]:
+        edge = self.get_relationship_by_id(edge_id)
+        if not edge:
+            return None
+        edge.validation = payload
+        return self._commit_and_refresh(edge)
 
     def _commit(self) -> None:
         try:
