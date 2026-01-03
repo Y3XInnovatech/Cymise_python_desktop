@@ -58,9 +58,7 @@ class GraphService:
     ) -> GraphEdge:
         source = self._require_twin(source_dtmi)
         target = self._require_twin(target_dtmi)
-        edge = self.repo.add_relationship(
-            source_id=source.id, target_id=target.id, name=name
-        )
+        edge = self.repo.add_relationship(source_id=source.id, target_id=target.id, name=name)
         return self._to_edge(edge, source, target)
 
     def get_outgoing_neighbors(self, dtmi: str) -> list[GraphNode]:
@@ -195,9 +193,7 @@ class GraphService:
         )
 
     @staticmethod
-    def _to_edge(
-        edge: RelationshipEdge, source: TwinNode, target: TwinNode
-    ) -> GraphEdge:
+    def _to_edge(edge: RelationshipEdge, source: TwinNode, target: TwinNode) -> GraphEdge:
         return GraphEdge(
             id=edge.id,
             name=edge.name,

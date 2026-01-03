@@ -35,9 +35,7 @@ class TwinNode(Base):
     dtmi: Mapped[str] = mapped_column(String, nullable=False)
     display_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     model_version: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    validation: Mapped[Optional[dict]] = mapped_column(
-        JSON, nullable=True, default=None
-    )
+    validation: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True, default=None)
 
     outgoing_edges: Mapped[list["RelationshipEdge"]] = relationship(
         back_populates="source",
@@ -65,9 +63,7 @@ class RelationshipEdge(Base):
     target_id: Mapped[int] = mapped_column(
         ForeignKey("twin_nodes.id", ondelete="CASCADE"), nullable=False
     )
-    validation: Mapped[Optional[dict]] = mapped_column(
-        JSON, nullable=True, default=None
-    )
+    validation: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True, default=None)
 
     source: Mapped["TwinNode"] = relationship(
         back_populates="outgoing_edges", foreign_keys=[source_id]

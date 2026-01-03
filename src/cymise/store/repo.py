@@ -27,9 +27,7 @@ class StoreRepository:
         display_name: Optional[str] = None,
         model_version: Optional[str] = None,
     ) -> TwinNode:
-        twin = TwinNode(
-            dtmi=dtmi, display_name=display_name, model_version=model_version
-        )
+        twin = TwinNode(dtmi=dtmi, display_name=display_name, model_version=model_version)
         self.session.add(twin)
         return self._commit_and_refresh(twin)
 
@@ -85,16 +83,12 @@ class StoreRepository:
     def get_relationship_by_id(self, edge_id: int) -> Optional[RelationshipEdge]:
         return self.session.get(RelationshipEdge, edge_id)
 
-    def get_relationships_for_source(
-        self, source_id: int
-    ) -> Iterable[RelationshipEdge]:
+    def get_relationships_for_source(self, source_id: int) -> Iterable[RelationshipEdge]:
         return self.session.scalars(
             select(RelationshipEdge).where(RelationshipEdge.source_id == source_id)
         ).all()
 
-    def get_relationships_for_target(
-        self, target_id: int
-    ) -> Iterable[RelationshipEdge]:
+    def get_relationships_for_target(self, target_id: int) -> Iterable[RelationshipEdge]:
         return self.session.scalars(
             select(RelationshipEdge).where(RelationshipEdge.target_id == target_id)
         ).all()
@@ -139,9 +133,7 @@ class StoreRepository:
         return self.session.scalars(select(ModelDocument)).all()
 
     # Validation payloads
-    def set_twin_validation(
-        self, dtmi: str, payload: Optional[dict]
-    ) -> Optional[TwinNode]:
+    def set_twin_validation(self, dtmi: str, payload: Optional[dict]) -> Optional[TwinNode]:
         twin = self.get_twin_by_dtmi(dtmi)
         if not twin:
             return None

@@ -28,7 +28,5 @@ def create_db(engine: Optional[Engine] = None) -> Engine:
 def get_session(engine: Optional[Engine] = None) -> Session:
     """Return a new session bound to the given or default engine."""
     engine = engine or get_engine()
-    SessionLocal = sessionmaker(
-        bind=engine, autoflush=False, autocommit=False, future=True
-    )
+    SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
     return SessionLocal()

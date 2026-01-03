@@ -86,9 +86,7 @@ def test_validation_payloads(service: GraphService):
         "dtmi:com:example:valnode;1", {"severity": "warning"}
     )
     assert node_result.validation == {"severity": "warning"}
-    assert service.get_node_validation("dtmi:com:example:valnode;1") == {
-        "severity": "warning"
-    }
+    assert service.get_node_validation("dtmi:com:example:valnode;1") == {"severity": "warning"}
 
     edge_result = service.set_edge_validation(edge.id, {"severity": "error"})
     assert edge_result.validation == {"severity": "error"}
@@ -98,9 +96,7 @@ def test_validation_payloads(service: GraphService):
 def test_create_relationship_missing_node_raises(service: GraphService):
     service.create_twin("dtmi:com:example:exists;1")
     with pytest.raises(ValueError):
-        service.create_relationship(
-            "dtmi:com:example:exists;1", "dtmi:com:example:missing;1"
-        )
+        service.create_relationship("dtmi:com:example:exists;1", "dtmi:com:example:missing;1")
 
 
 def test_get_subgraph_directionality(service: GraphService):
@@ -117,9 +113,7 @@ def test_get_subgraph_directionality(service: GraphService):
     assert edges_d == []
 
     # Undirected traversal from C should include neighborhood
-    nodes_u, edges_u = service.get_subgraph(
-        "dtmi:com:example:c2;1", max_hops=2, directed=False
-    )
+    nodes_u, edges_u = service.get_subgraph("dtmi:com:example:c2;1", max_hops=2, directed=False)
     assert {n.dtmi for n in nodes_u} == {
         "dtmi:com:example:a2;1",
         "dtmi:com:example:b2;1",
