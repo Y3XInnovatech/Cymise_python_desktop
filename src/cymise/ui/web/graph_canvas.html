@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>CyMiSE Graph Canvas</title>
+    <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+    <script src="graph_canvas.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 16px;
+      }
+      #status {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>Graph Canvas Loaded</h3>
+    <p id="status">Waiting for ping/pong...</p>
+    <p id="from-python"></p>
+    <button id="ping-btn" type="button">Send Ping</button>
+  </body>
+</html>

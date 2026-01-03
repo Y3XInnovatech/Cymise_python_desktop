@@ -19,6 +19,9 @@ dev = [
   "ruff>=0.6.9",
   "pytest>=7.4",
 ]
+ui = [
+  "PySide6>=6.6",
+]
 
 [tool.setuptools]
 package-dir = { "" = "src" }
