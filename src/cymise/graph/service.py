@@ -165,6 +165,10 @@ class GraphService:
             return None
         return edge.validation
 
+    # Documents
+    def get_model_document(self, dtmi: str):
+        return self.repo.get_model_document_by_dtmi(dtmi)
+
     # Helpers
     def _require_twin(self, dtmi: str) -> TwinNode:
         twin = self.repo.get_twin_by_dtmi(dtmi)

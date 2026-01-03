@@ -132,6 +132,9 @@ class StoreRepository:
     def list_model_documents(self) -> Iterable[ModelDocument]:
         return self.session.scalars(select(ModelDocument)).all()
 
+    def get_model_document_by_dtmi(self, dtmi: str) -> Optional[ModelDocument]:
+        return self.session.scalar(select(ModelDocument).where(ModelDocument.dtmi == dtmi))
+
     def upsert_model_document(
         self, name: str, content: str, dtmi: Optional[str] = None
     ) -> ModelDocument:
