@@ -33,6 +33,7 @@ def test_schema_created(engine):
         "file_objects",
         "extracted_objects",
         "model_documents",
+        "stitch_candidates",
     }
     assert expected.issubset(table_names)
 

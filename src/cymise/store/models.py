@@ -88,6 +88,9 @@ class FileObject(Base):
     extracted_objects: Mapped[list["ExtractedObject"]] = relationship(
         back_populates="file_object", cascade="all, delete-orphan"
     )
+    stitches: Mapped[list["StitchCandidate"]] = relationship(
+        back_populates="file_object", cascade="all, delete-orphan"
+    )
 
 
 class ExtractedObject(Base):
@@ -101,6 +104,34 @@ class ExtractedObject(Base):
     )
 
     file_object: Mapped["FileObject"] = relationship(back_populates="extracted_objects")
+    stitches: Mapped[list["StitchCandidate"]] = relationship(
+        back_populates="extracted_object", cascade="all, delete-orphan"
+    )
+
+
+class StitchCandidate(Base):
+    __tablename__ = "stitch_candidates"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    file_object_id: Mapped[int] = mapped_column(
+        ForeignKey("file_objects.id", ondelete="CASCADE"), nullable=False
+    )
+    extracted_object_id: Mapped[int] = mapped_column(
+        ForeignKey("extracted_objects.id", ondelete="CASCADE"), nullable=False
+    )
+
+    dt_key: Mapped[str] = mapped_column(String, nullable=False)
+    target_dtmi: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+    confidence: Mapped[float] = mapped_column(default=0.5)
+    rationale: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+    status: Mapped[str] = mapped_column(String, nullable=False, default="candidate")
+    # allowed: "candidate"|"accepted"|"rejected"
+
+    file_object: Mapped["FileObject"] = relationship(back_populates="stitches")
+    extracted_object: Mapped["ExtractedObject"] = relationship(back_populates="stitches")
 
 
 class ModelDocument(Base):

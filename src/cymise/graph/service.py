@@ -213,6 +213,49 @@ class GraphService:
             raise ValueError(f"File not found for id={file_id}")
         return self._file_to_dict(updated)
 
+    def diff_latest_extraction_for_file(self, file_object_id: int, kind: str) -> Optional[dict]:
+        extractions = self.repo.list_extracted_objects_for_file(
+            file_object_id, kind=kind, newest_first=True
+        )
+        if len(extractions) < 2:
+            return None
+
+        from cymise.revision_diff.service import RevisionDiffService
+
+        service = RevisionDiffService(self)
+        result = service.diff_extracted_objects(
+            old_id=extractions[1].id,
+            new_id=extractions[0].id,
+        )
+        if not result:
+            return None
+        return RevisionDiffService.to_dict(result)
+
+    def stitch_file(self, file_object_id: int) -> list[dict]:
+        from cymise.stitch.service import StitchService
+
+        return StitchService(self).stitch_file(file_object_id)
+
+    def list_stitches(
+        self, file_object_id: Optional[int] = None, status: Optional[str] = None
+    ) -> list[dict]:
+        candidates = self.repo.list_stitch_candidates(
+            file_object_id=file_object_id, status=status
+        )
+        return [
+            {
+                "id": candidate.id,
+                "file_object_id": candidate.file_object_id,
+                "extracted_object_id": candidate.extracted_object_id,
+                "dt_key": candidate.dt_key,
+                "target_dtmi": candidate.target_dtmi,
+                "confidence": candidate.confidence,
+                "rationale": candidate.rationale,
+                "status": candidate.status,
+            }
+            for candidate in candidates
+        ]
+
     # Helpers
     def _require_twin(self, dtmi: str) -> TwinNode:
         twin = self.repo.get_twin_by_dtmi(dtmi)

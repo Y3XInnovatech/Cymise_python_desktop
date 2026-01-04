@@ -1,0 +1,1 @@
+# Stitching package initialization

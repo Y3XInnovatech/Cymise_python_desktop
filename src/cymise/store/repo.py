@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Iterable, Optional
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from .models import (
@@ -10,6 +10,7 @@ from .models import (
     FileObject,
     ModelDocument,
     RelationshipEdge,
+    StitchCandidate,
     TwinNode,
 )
 
@@ -151,6 +152,22 @@ class StoreRepository:
     def list_extracted_objects(self) -> Iterable[ExtractedObject]:
         return self.session.scalars(select(ExtractedObject)).all()
 
+    def list_extracted_objects_for_file(
+        self,
+        file_object_id: int,
+        kind: Optional[str] = None,
+        newest_first: bool = True,
+    ) -> Iterable[ExtractedObject]:
+        stmt = select(ExtractedObject).where(ExtractedObject.file_object_id == file_object_id)
+        if kind is not None:
+            stmt = stmt.where(ExtractedObject.kind == kind)
+        order_column = ExtractedObject.id.desc() if newest_first else ExtractedObject.id
+        stmt = stmt.order_by(order_column)
+        return self.session.scalars(stmt).all()
+
+    def get_extracted_object_by_id(self, extracted_object_id: int) -> Optional[ExtractedObject]:
+        return self.session.get(ExtractedObject, extracted_object_id)
+
     # ModelDocument
     def add_model_document(
         self, name: str, content: str, dtmi: Optional[str] = None
@@ -181,6 +198,74 @@ class StoreRepository:
         doc = ModelDocument(name=name, content=content, dtmi=dtmi)
         self.session.add(doc)
         return self._commit_and_refresh(doc)
+
+    # Stitch candidates
+    def add_stitch_candidate(
+        self,
+        file_object_id: int,
+        extracted_object_id: int,
+        dt_key: str,
+        target_dtmi: Optional[str] = None,
+        confidence: float = 0.5,
+        rationale: Optional[str] = None,
+        status: str = "candidate",
+    ) -> StitchCandidate:
+        candidate = StitchCandidate(
+            file_object_id=file_object_id,
+            extracted_object_id=extracted_object_id,
+            dt_key=dt_key,
+            target_dtmi=target_dtmi,
+            confidence=confidence,
+            rationale=rationale,
+            status=status,
+        )
+        self.session.add(candidate)
+        return self._commit_and_refresh(candidate)
+
+    def list_stitch_candidates(
+        self,
+        *,
+        file_object_id: Optional[int] = None,
+        extracted_object_id: Optional[int] = None,
+        status: Optional[str] = None,
+    ) -> Iterable[StitchCandidate]:
+        stmt = select(StitchCandidate)
+        if file_object_id is not None:
+            stmt = stmt.where(StitchCandidate.file_object_id == file_object_id)
+        if extracted_object_id is not None:
+            stmt = stmt.where(StitchCandidate.extracted_object_id == extracted_object_id)
+        if status is not None:
+            stmt = stmt.where(StitchCandidate.status == status)
+        return self.session.scalars(stmt).all()
+
+    def update_stitch_candidate(
+        self,
+        candidate_id: int,
+        *,
+        status: Optional[str] = None,
+        target_dtmi: Optional[str] = None,
+        confidence: Optional[float] = None,
+        rationale: Optional[str] = None,
+    ) -> Optional[StitchCandidate]:
+        candidate = self.session.get(StitchCandidate, candidate_id)
+        if not candidate:
+            return None
+        if status is not None:
+            candidate.status = status
+        if target_dtmi is not None:
+            candidate.target_dtmi = target_dtmi
+        if confidence is not None:
+            candidate.confidence = confidence
+        if rationale is not None:
+            candidate.rationale = rationale
+        return self._commit_and_refresh(candidate)
+
+    def delete_stitches_for_file(self, file_object_id: int) -> int:
+        result = self.session.execute(
+            delete(StitchCandidate).where(StitchCandidate.file_object_id == file_object_id)
+        )
+        self._commit()
+        return result.rowcount or 0
 
     # Validation payloads
     def set_twin_validation(self, dtmi: str, payload: Optional[dict]) -> Optional[TwinNode]:
