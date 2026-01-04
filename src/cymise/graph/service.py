@@ -256,6 +256,19 @@ class GraphService:
             for candidate in candidates
         ]
 
+    def compute_impact_for_file(
+        self, file_object_id: int, kind: str, *, hops: int = 1, directed: bool = True
+    ) -> Optional[dict]:
+        from cymise.impact.service import ImpactService
+
+        service = ImpactService(self)
+        result = service.compute_impact_for_file(
+            file_object_id=file_object_id, kind=kind, hops=hops, directed=directed
+        )
+        if not result:
+            return None
+        return ImpactService.to_dict(result)
+
     # Helpers
     def _require_twin(self, dtmi: str) -> TwinNode:
         twin = self.repo.get_twin_by_dtmi(dtmi)

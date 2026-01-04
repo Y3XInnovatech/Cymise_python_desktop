@@ -7,6 +7,7 @@ from cymise.graph.service import GraphService
 from .views.artifacts_view import ArtifactsView
 from .views.graph_view import GraphView
 from .views.properties_panel import PropertiesPanel
+from .views.impact_view import ImpactView
 from .views.validation_view import ValidationView
 
 
@@ -23,9 +24,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.artifacts_view = ArtifactsView(
             graph_service, get_selected_dtmi=lambda: self._current_selected_dtmi()
         )
+        self.impact_view = ImpactView(
+            graph_service,
+            highlight_node=lambda dtmi: self.graph_view.select_element("node", dtmi),
+            parent=self,
+        )
         self.tabs.addTab(self.artifacts_view, "Artifacts")
         self.tabs.addTab(self.validation_view, "Validation")
-        self.tabs.addTab(self._placeholder_tab("Impact"), "Impact")
+        self.tabs.addTab(self.impact_view, "Impact")
 
         self.setCentralWidget(self.tabs)
         self.tabs.currentChanged.connect(self._on_tab_changed)
@@ -140,6 +146,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.validation_view.refresh_from_store(self.graph_view.graph_service)
         if self.tabs.widget(index) is self.artifacts_view:
             self.artifacts_view.refresh_from_store()
+        if self.tabs.widget(index) is self.impact_view:
+            self.impact_view.refresh_artifacts()
 
 
     def _on_validation_issue_activated(self, kind: str, element_id: str) -> None:
