@@ -5,6 +5,7 @@ from typing import Callable, Optional
 from PySide6 import QtWidgets
 
 from cymise.graph.service import GraphService
+from cymise.tools.launcher import launch_tool
 
 
 class ArtifactsView(QtWidgets.QWidget):
@@ -31,9 +32,10 @@ class ArtifactsView(QtWidgets.QWidget):
         detach_btn = QtWidgets.QPushButton("Detach")
         refresh_btn = QtWidgets.QPushButton("Refresh")
         set_meta_btn = QtWidgets.QPushButton("Set Version/Type")
+        edit_btn = QtWidgets.QPushButton("Edit")
 
         btn_row = QtWidgets.QHBoxLayout()
-        for btn in (add_btn, attach_btn, detach_btn, set_meta_btn, refresh_btn):
+        for btn in (add_btn, attach_btn, detach_btn, set_meta_btn, edit_btn, refresh_btn):
             btn_row.addWidget(btn)
         btn_row.addStretch(1)
 
@@ -46,6 +48,7 @@ class ArtifactsView(QtWidgets.QWidget):
         detach_btn.clicked.connect(self._detach)
         refresh_btn.clicked.connect(self.refresh_from_store)
         set_meta_btn.clicked.connect(self._set_metadata)
+        edit_btn.clicked.connect(self._edit_file)
 
     def refresh_from_store(self) -> None:
         files = self.graph_service.list_file_objects()
@@ -103,3 +106,30 @@ class ArtifactsView(QtWidgets.QWidget):
             file_id, version=version or None, media_type=media_type or None
         )
         self.refresh_from_store()
+
+    def _edit_file(self) -> None:
+        file_id = self._selected_file_id()
+        if file_id is None:
+            QtWidgets.QMessageBox.warning(self, "Edit", "Select a file to edit.")
+            return
+        row = self.table.currentRow()
+        path_item = self.table.item(row, 1)
+        if not path_item:
+            return
+        path = path_item.text()
+        if not path:
+            QtWidgets.QMessageBox.warning(self, "Edit", "Selected file has no path.")
+            return
+        tool = self._infer_tool(path)
+        result = launch_tool(tool, path)
+        if not result.ok:
+            QtWidgets.QMessageBox.warning(self, "Edit", result.message)
+
+    @staticmethod
+    def _infer_tool(path: str) -> str:
+        lower = path.lower()
+        if lower.endswith(".fcstd"):
+            return "freecad"
+        if lower.endswith(".kicad_pcb") or lower.endswith(".kicad_sch"):
+            return "kicad"
+        return "default"
