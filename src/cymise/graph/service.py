@@ -165,6 +165,14 @@ class GraphService:
             return None
         return edge.validation
 
+    def update_relationship_name(self, edge_id: int, name: Optional[str]) -> GraphEdge:
+        edge = self.repo.update_relationship_name(edge_id, name)
+        if not edge:
+            raise ValueError(f"Edge not found for id={edge_id}")
+        source = self._require_twin_by_id(edge.source_id)
+        target = self._require_twin_by_id(edge.target_id)
+        return self._to_edge(edge, source, target)
+
     # Documents
     def get_model_document(self, dtmi: str):
         return self.repo.get_model_document_by_dtmi(dtmi)

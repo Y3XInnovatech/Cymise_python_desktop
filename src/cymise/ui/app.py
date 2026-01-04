@@ -27,6 +27,6 @@ def run_app(graph_service: GraphService, *, argv: Optional[list[str]] = None) ->
 
 if __name__ == "__main__":
     raise SystemExit(
-        "This module is not intended to be run directly. " \
+        "This module is not intended to be run directly. "
         "Import and call run_app(graph_service)."
     )

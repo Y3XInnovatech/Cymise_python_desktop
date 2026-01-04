@@ -83,6 +83,15 @@ class StoreRepository:
     def get_relationship_by_id(self, edge_id: int) -> Optional[RelationshipEdge]:
         return self.session.get(RelationshipEdge, edge_id)
 
+    def update_relationship_name(
+        self, edge_id: int, name: Optional[str]
+    ) -> Optional[RelationshipEdge]:
+        edge = self.get_relationship_by_id(edge_id)
+        if not edge:
+            return None
+        edge.name = name
+        return self._commit_and_refresh(edge)
+
     def get_relationships_for_source(self, source_id: int) -> Iterable[RelationshipEdge]:
         return self.session.scalars(
             select(RelationshipEdge).where(RelationshipEdge.source_id == source_id)
