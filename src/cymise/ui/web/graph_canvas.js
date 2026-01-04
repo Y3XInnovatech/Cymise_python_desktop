@@ -46,6 +46,15 @@
                 "text-background-opacity": 0.6,
               },
             },
+            {
+              selector: ":selected",
+              style: {
+                "border-color": "#222",
+                "border-width": 3,
+                "line-color": "#222",
+                "target-arrow-color": "#222",
+              },
+            },
             { selector: ".ok", style: { "background-color": "#28a745", "line-color": "#28a745" } },
             {
               selector: ".warning",
@@ -168,11 +177,20 @@
       });
     };
 
-const validationClass = (validation) => {
-  if (!validation) return "ok";
+    window.cySelectElement = ({ kind, id }) => {
+      if (!cy) return;
+      const ele = cy.getElementById(id);
+      if (!ele || !ele.length) return;
+      cy.elements().unselect();
+      ele.select();
+      cy.center(ele);
+    };
 
-  // Preferred schema (matches importer GraphService payload):
-  // { issues: [{ severity: "error"|"warning", ... }], is_ok: boolean }
+    const validationClass = (validation) => {
+      if (!validation) return "ok";
+
+      // Preferred schema (matches importer GraphService payload):
+      // { issues: [{ severity: "error"|"warning", ... }], is_ok: boolean }
   const issues = validation.issues;
   if (Array.isArray(issues)) {
     const hasError = issues.some((i) => i && i.severity === "error");

@@ -6,6 +6,7 @@ from cymise.graph.service import GraphService
 
 from .views.graph_view import GraphView
 from .views.properties_panel import PropertiesPanel
+from .views.validation_view import ValidationView
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -15,13 +16,17 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.setWindowTitle("CyMiSE Desktop")
 
-        tabs = QtWidgets.QTabWidget()
-        tabs.addTab(self._build_graph_tab(graph_service), "Graph")
-        tabs.addTab(self._placeholder_tab("Artifacts"), "Artifacts")
-        tabs.addTab(self._placeholder_tab("Validation"), "Validation")
-        tabs.addTab(self._placeholder_tab("Impact"), "Impact")
+        self.tabs = QtWidgets.QTabWidget()
+        self.tabs.addTab(self._build_graph_tab(graph_service), "Graph")
+        self.validation_view = ValidationView(graph_service, parent=self)
+        self.tabs.addTab(self._placeholder_tab("Artifacts"), "Artifacts")
+        self.tabs.addTab(self.validation_view, "Validation")
+        self.tabs.addTab(self._placeholder_tab("Impact"), "Impact")
 
-        self.setCentralWidget(tabs)
+        self.setCentralWidget(self.tabs)
+        self.tabs.currentChanged.connect(self._on_tab_changed)
+        self.validation_view.issueActivated.connect(self._on_validation_issue_activated)
+        self.validation_view.refresh_from_store(graph_service)
 
     def _build_graph_tab(self, graph_service: GraphService) -> QtWidgets.QWidget:
         container = QtWidgets.QWidget()
@@ -120,3 +125,16 @@ class MainWindow(QtWidgets.QMainWindow):
                 }
             ]
         )
+
+    def _on_tab_changed(self, index: int) -> None:
+        if self.tabs.widget(index) is self.validation_view:
+            self.validation_view.refresh_from_store(self.graph_view.graph_service)
+
+    def _on_validation_issue_activated(self, kind: str, element_id: str) -> None:
+        self.tabs.setCurrentIndex(0)
+        if kind == "node":
+            self.properties_panel.show_node(element_id)
+            self.graph_view.select_element("node", element_id)
+        elif kind == "edge":
+            self.properties_panel.show_edge(element_id)
+            self.graph_view.select_element("edge", element_id)

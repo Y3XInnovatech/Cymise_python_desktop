@@ -67,6 +67,12 @@ class GraphView(QtWidgets.QWidget):
     def apply_validation_styles(self, mapping: dict[str, str]) -> None:
         self._run_js("window.cyApplyValidation && window.cyApplyValidation", mapping)
 
+    def select_element(self, kind: str, element_id: str) -> None:
+        self._run_js(
+            "window.cySelectElement && window.cySelectElement",
+            {"kind": kind, "id": element_id},
+        )
+
     def _run_js(self, func_prefix: str, payload: object) -> None:
         try:
             encoded = json.dumps(payload)
