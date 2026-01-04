@@ -119,6 +119,27 @@ class StoreRepository:
     def list_file_objects(self) -> Iterable[FileObject]:
         return self.session.scalars(select(FileObject)).all()
 
+    def get_file_object_by_id(self, file_id: int) -> Optional[FileObject]:
+        return self.session.get(FileObject, file_id)
+
+    def update_file_object(
+        self,
+        file_id: int,
+        *,
+        twin_id: Optional[int] = None,
+        media_type: Optional[str] = None,
+        version: Optional[str] = None,
+    ) -> Optional[FileObject]:
+        file_obj = self.get_file_object_by_id(file_id)
+        if not file_obj:
+            return None
+        file_obj.twin_id = twin_id
+        if media_type is not None:
+            file_obj.media_type = media_type
+        if version is not None:
+            file_obj.version = version
+        return self._commit_and_refresh(file_obj)
+
     # ExtractedObject
     def add_extracted_object(
         self, file_object_id: int, kind: str, data: dict

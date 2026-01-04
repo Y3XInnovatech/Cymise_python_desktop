@@ -4,6 +4,7 @@ from PySide6 import QtWidgets
 
 from cymise.graph.service import GraphService
 
+from .views.artifacts_view import ArtifactsView
 from .views.graph_view import GraphView
 from .views.properties_panel import PropertiesPanel
 from .views.validation_view import ValidationView
@@ -19,7 +20,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs = QtWidgets.QTabWidget()
         self.tabs.addTab(self._build_graph_tab(graph_service), "Graph")
         self.validation_view = ValidationView(graph_service, parent=self)
-        self.tabs.addTab(self._placeholder_tab("Artifacts"), "Artifacts")
+        self.artifacts_view = ArtifactsView(
+            graph_service, get_selected_dtmi=lambda: self._current_selected_dtmi()
+        )
+        self.tabs.addTab(self.artifacts_view, "Artifacts")
         self.tabs.addTab(self.validation_view, "Validation")
         self.tabs.addTab(self._placeholder_tab("Impact"), "Impact")
 
@@ -61,6 +65,11 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addWidget(QtWidgets.QLabel(f"{label} view coming soon"))
         layout.addStretch(1)
         return widget
+
+    def _current_selected_dtmi(self) -> str | None:
+        if self.properties_panel.current_kind == "node":
+            return self.properties_panel.current_id
+        return None
 
     def _on_selection_changed(self, element_id: str, kind: str) -> None:
         if kind == "node":
@@ -129,6 +138,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def _on_tab_changed(self, index: int) -> None:
         if self.tabs.widget(index) is self.validation_view:
             self.validation_view.refresh_from_store(self.graph_view.graph_service)
+        if self.tabs.widget(index) is self.artifacts_view:
+            self.artifacts_view.refresh_from_store()
+
 
     def _on_validation_issue_activated(self, kind: str, element_id: str) -> None:
         self.tabs.setCurrentIndex(0)

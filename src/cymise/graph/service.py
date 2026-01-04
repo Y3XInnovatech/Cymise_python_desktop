@@ -177,6 +177,42 @@ class GraphService:
     def get_model_document(self, dtmi: str):
         return self.repo.get_model_document_by_dtmi(dtmi)
 
+    # FileObjects
+    def add_file_object(
+        self,
+        path: str,
+        media_type: Optional[str] = None,
+        version: Optional[str] = None,
+        twin_dtmi: Optional[str] = None,
+    ) -> dict:
+        twin_id = None
+        if twin_dtmi:
+            twin = self.repo.get_twin_by_dtmi(twin_dtmi)
+            if not twin:
+                raise ValueError(f"Twin not found for dtmi={twin_dtmi}")
+            twin_id = twin.id
+        file_obj = self.repo.add_file_object(path=path, media_type=media_type, version=version, twin_id=twin_id)
+        return self._file_to_dict(file_obj)
+
+    def list_file_objects(self) -> list[dict]:
+        file_objs = self.repo.list_file_objects()
+        return [self._file_to_dict(f) for f in file_objs]
+
+    def attach_file(self, file_id: int, twin_dtmi: str) -> dict:
+        twin = self.repo.get_twin_by_dtmi(twin_dtmi)
+        if not twin:
+            raise ValueError(f"Twin not found for dtmi={twin_dtmi}")
+        updated = self.repo.update_file_object(file_id, twin_id=twin.id)
+        if not updated:
+            raise ValueError(f"File not found for id={file_id}")
+        return self._file_to_dict(updated)
+
+    def detach_file(self, file_id: int) -> dict:
+        updated = self.repo.update_file_object(file_id, twin_id=None)
+        if not updated:
+            raise ValueError(f"File not found for id={file_id}")
+        return self._file_to_dict(updated)
+
     # Helpers
     def _require_twin(self, dtmi: str) -> TwinNode:
         twin = self.repo.get_twin_by_dtmi(dtmi)
@@ -213,3 +249,16 @@ class GraphService:
             target_dtmi=target.dtmi,
             validation=edge.validation,
         )
+
+    def _file_to_dict(self, file_obj):
+        twin_dtmi = None
+        if file_obj.twin_id:
+            twin = self.repo.get_twin_by_id(file_obj.twin_id)
+            twin_dtmi = twin.dtmi if twin else None
+        return {
+            "id": file_obj.id,
+            "path": file_obj.path,
+            "media_type": file_obj.media_type,
+            "version": file_obj.version,
+            "twin_dtmi": twin_dtmi,
+        }
